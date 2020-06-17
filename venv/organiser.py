@@ -1,3 +1,15 @@
+'''
+To-Do:
+
+Sort out duplicates
+
+Find date throuhg metadata
+
+Oraganise by date
+
+'''
+
+
 import sys
 import os
 import shutil
@@ -27,9 +39,11 @@ def metadataDate(currentDirectory, folderName):
 
 
 def isDuplicate(folderName, moveToDirectory, moveToFolder):
+    print("Running isDuplicate:")
+    print(f"moveToFolder (inside isDuplicate): {moveToFolder}")
     flag = False
     moveTo = f"{moveToDirectory}\{moveToFolder}"
-    print(f"moveto: {moveTo}")
+    print(f"moveto (inside isDuplicate): {moveTo}")
     with os.scandir(moveTo) as entries:
         for entry in entries:
             destFolderName = entry.name
@@ -42,17 +56,17 @@ def isDuplicate(folderName, moveToDirectory, moveToFolder):
 def findAndMove(currentDirectory, moveToDirectory, date, folderName):
 
     foundFlag = False
-    # Loop through moveToDirectory and find the folder that matches the date:
+    # Loop through destination directory and find the folder that matches the date:
     with os.scandir(moveToDirectory) as entries:
         for entry in entries:
-            folderDate = getDate(entry)
-            currentFolder = (f"{currentDirectory}\{folderName}")
-            print(isDuplicate(folderName, moveToDirectory, entry.name))
+            folderDate = getDate(entry) # Destination Folder's file's date
+            currentFolder = (f"{currentDirectory}\{folderName}") # The current file in the destination folder
+            print(f"entry.name (findAndMove): {entry.name}") # Destination folder it's at
 
-            if isDuplicate == False:
+            if folderDate == date:
+                print(f"We've found a folder for {date}!")
 
-                if folderDate == date:
-                    print(f"We've found a matching folder for {date}!")
+                if isDuplicate(folderName, moveToDirectory, entry.name) == False:
 
                     destinationFolder = (f"{moveToDirectory}\{date}")
 
@@ -64,25 +78,26 @@ def findAndMove(currentDirectory, moveToDirectory, date, folderName):
                     foundFlag = True
                     break
 
-                if foundFlag == False:
-                    answer = input(f"There are no folders with the year {date}, would you like to make a new folder for it?")
 
-                    if answer == "Y":
-                        # Create a folder with title of the date and run function again
-                        newDir = os.path.join(moveToDirectory, date)
-                        os.mkdir(newDir)
+                else:
 
-                        findAndMove(currentDirectory, moveToDirectory, date, folderName)
-                    else:
-                        print(f"You've chosen not to create a folder for {date}")
+                    destinationFolder = (f"{moveToDirectory}\Duplicates")
+                    dest = shutil.move(currentFolder, destinationFolder)
+                    print("This file is a duplicate so I've placed it inside the folder 'duplicates'")
+                    foundFlag = True
 
+        if foundFlag == False:
+            answer = input(
+                f"There are no folders with the year {date}, would you like to make a new folder for it?")
 
+            if answer == "Y":
+                # Create a folder with title of the date and run function again
+                newDir = os.path.join(moveToDirectory, date)
+                os.mkdir(newDir)
+
+                findAndMove(currentDirectory, moveToDirectory, date, folderName)
             else:
-
-                destinationFolder = (f"{moveToDirectory}\Duplicates")
-                dest = shutil.move(currentFolder, destinationFolder)
-                print("This file is a duplicate so I've placed it inside the folder 'duplicates'")
-
+                print(f"You've chosen not to create a folder for {date}")
 
 
 # Main section that is run first:
@@ -96,6 +111,8 @@ isExistMoveTo = os.path.exists(moveToDirectory)
 
 if isExistCurrent and isExistMoveTo:
     print("They exist!!!")
+
+    # Loops through the current directory
     with os.scandir(currentDirectory) as entries:
         for entry in entries:
 
@@ -107,7 +124,7 @@ if isExistCurrent and isExistMoveTo:
 
 
                 print(f"entryDate: {entryDate}")
-                print(f"entry.name: {folderName}")
+                print(f"entry.name: (main) {folderName}")
 
                 findAndMove(currentDirectory, moveToDirectory, entryDate, folderName)
 
